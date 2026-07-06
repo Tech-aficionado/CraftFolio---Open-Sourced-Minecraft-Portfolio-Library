@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Craftfolio from "./Craftfolio";
 import type { DeepPartial, PortfolioData, PortfolioOptions } from "./types";
@@ -6,6 +6,12 @@ import type { DeepPartial, PortfolioData, PortfolioOptions } from "./types";
 type Position = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 export type CraftfolioToggleProps = {
+  /**
+   * Your normal site. It renders by default; the button switches to the
+   * Minecraft version and back. Omit it to just get the floating button
+   * (e.g. when your normal UI lives elsewhere on the page).
+   */
+  children?: ReactNode;
   /** Your portfolio content (same shape as `<Craftfolio data>`). */
   data?: DeepPartial<PortfolioData>;
   /** Craftfolio rendering options. */
@@ -49,6 +55,7 @@ const POS: Record<Position, React.CSSProperties> = {
  * ```
  */
 export default function CraftfolioToggle({
+  children,
   data,
   options,
   label = "Minecraft Mode",
@@ -101,8 +108,6 @@ export default function CraftfolioToggle({
     };
   }, [active, setActivePersisted]);
 
-  if (!mounted) return null;
-
   const fab: React.CSSProperties = {
     position: "fixed",
     ...POS[position],
@@ -145,29 +150,43 @@ export default function CraftfolioToggle({
     WebkitOverflowScrolling: "touch",
   };
 
-  return createPortal(
+  return (
     <>
-      {active && (
-        <div style={overlay} role="dialog" aria-modal="true" aria-label="Minecraft themed portfolio">
-          <Craftfolio data={data} options={options} />
-        </div>
-      )}
+      {/* Your normal site (rendered in place) */}
+      {children}
 
-      {!hideButton && (
-        <button
-          type="button"
-          onClick={toggle}
-          style={fab}
-          aria-pressed={active}
-          title={active ? exitLabel : label}
-        >
-          <span aria-hidden style={{ fontSize: 16 }}>
-            {active ? "✕" : "⛏️"}
-          </span>
-          {active ? exitLabel : label}
-        </button>
-      )}
-    </>,
-    document.body
+      {/* Button + overlay live at the top of the DOM, above everything */}
+      {mounted &&
+        createPortal(
+          <>
+            {active && (
+              <div
+                style={overlay}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Minecraft themed portfolio"
+              >
+                <Craftfolio data={data} options={options} />
+              </div>
+            )}
+
+            {!hideButton && (
+              <button
+                type="button"
+                onClick={toggle}
+                style={fab}
+                aria-pressed={active}
+                title={active ? exitLabel : label}
+              >
+                <span aria-hidden style={{ fontSize: 16 }}>
+                  {active ? "✕" : "⛏️"}
+                </span>
+                {active ? exitLabel : label}
+              </button>
+            )}
+          </>,
+          document.body
+        )}
+    </>
   );
 }

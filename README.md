@@ -82,7 +82,7 @@ Craftfolio renders WebGL and uses browser APIs, so it must run on the **client**
 
 ### Option A — theme toggle (recommended for existing sites)
 
-`CraftfolioToggle` renders a floating button and, on click, overlays the full Minecraft-themed portfolio on top of your current page. It portals to `document.body`, locks background scroll, and exits on `Esc` — so you can drop it anywhere.
+Wrap your normal site as `children`. `CraftfolioToggle` renders it as-is and adds a floating button that **switches between your normal version and the Minecraft version**. When on, it overlays the full themed portfolio (portaled to `document.body`, background scroll locked, exits on `Esc`).
 
 ```tsx
 "use client"; // Next.js App Router only
@@ -93,13 +93,14 @@ import { portfolioData } from "./portfolio-data";
 
 export default function Layout({ children }) {
   return (
-    <>
-      {children}
-      <CraftfolioToggle data={portfolioData} position="bottom-right" persist />
-    </>
+    <CraftfolioToggle data={portfolioData} position="bottom-right" persist>
+      {children /* your normal site */}
+    </CraftfolioToggle>
   );
 }
 ```
+
+> No `children`? It still works — you just get the floating button + overlay, handy when your normal UI lives elsewhere on the page.
 
 Prefer your own button? Hide the built-in one and drive it via state:
 
@@ -235,6 +236,7 @@ Everything above (`data`, `options`) plus:
 
 | Prop | Type | Default | Description |
 | --- | --- | --- | --- |
+| `children` | `ReactNode` | — | Your normal site. Shown by default; the button switches to the Minecraft version and back. |
 | `label` | `string` | `"Minecraft Mode"` | Button text when the theme is off. |
 | `exitLabel` | `string` | `"Exit Minecraft"` | Button text when the theme is on. |
 | `position` | `"bottom-right" \| "bottom-left" \| "top-right" \| "top-left"` | `"bottom-right"` | Corner for the floating button. |
