@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* ---------------------------------------------------------------
+     Preflight is disabled (see tailwind.config.js) so the library
+     never touches the host page. These resets are re-added, scoped
+     to the .craftfolio wrapper, so the themed UI renders correctly.
+  --------------------------------------------------------------- */
+  .craftfolio {
+    color-scheme: dark;
+    background-color: #0d0f12;
+    overflow-x: hidden;
+    image-rendering: pixelated;
+    line-height: 1.5;
+  }
+  .craftfolio *,
+  .craftfolio *::before,
+  .craftfolio *::after {
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: currentColor;
+  }
+  .craftfolio * {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .craftfolio h1,
+  .craftfolio h2,
+  .craftfolio h3,
+  .craftfolio h4,
+  .craftfolio p,
+  .craftfolio ul,
+  .craftfolio figure {
+    margin: 0;
+  }
+  .craftfolio ul {
+    list-style: none;
+    padding: 0;
+  }
+  .craftfolio a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .craftfolio button {
+    font: inherit;
+    background: none;
+    cursor: pointer;
+  }
+  .craftfolio img,
+  .craftfolio svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* VT323 is small; bump base readable text up */
+  .craftfolio p,
+  .craftfolio li,
+  .craftfolio span,
+  .craftfolio a {
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+  }
+
+  .craftfolio ::selection {
+    background: #7cb518;
+    color: #0d0f12;
+  }
+
+  /* Pixel scrollbar (scoped to elements inside the portfolio) */
+  .craftfolio ::-webkit-scrollbar {
+    width: 14px;
+  }
+  .craftfolio ::-webkit-scrollbar-track {
+    background: #1a1d23;
+  }
+  .craftfolio ::-webkit-scrollbar-thumb {
+    background: #5b8731;
+    border: 3px solid #1a1d23;
+  }
+  .craftfolio ::-webkit-scrollbar-thumb:hover {
+    background: #7cb518;
+  }
+}
+
+@layer components {
+  /* Classic Minecraft 3D beveled panel */
+  .mc-panel {
+    @apply relative bg-panel/95 border-4;
+    border-color: #3a3f47 #14161a #14161a #3a3f47;
+    box-shadow: inset -4px -4px 0 0 rgba(0, 0, 0, 0.45),
+      inset 4px 4px 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Minecraft dirt/stone textured surface */
+  .mc-dirt {
+    background-color: #79553a;
+    background-image: radial-gradient(
+        rgba(0, 0, 0, 0.18) 1px,
+        transparent 1px
+      ),
+      radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 8px 8px, 8px 8px;
+    background-position: 0 0, 4px 4px;
+  }
+
+  .mc-stone {
+    background-color: #565656;
+    background-image: radial-gradient(
+        rgba(0, 0, 0, 0.22) 1px,
+        transparent 1px
+      ),
+      radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+    background-size: 6px 6px, 6px 6px;
+    background-position: 0 0, 3px 3px;
+  }
+
+  /* Classic Minecraft green/gold button */
+  .mc-btn {
+    @apply relative inline-flex items-center justify-center gap-2 font-pixel uppercase tracking-tight cursor-pointer select-none;
+    font-size: 0.7rem;
+    padding: 0.85rem 1.4rem;
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+    background: linear-gradient(#7cb518, #5b8731);
+    border: 3px solid;
+    border-color: #a4de3a #2f4718 #2f4718 #a4de3a;
+    box-shadow: 0 4px 0 0 #2f4718, 0 6px 8px rgba(0, 0, 0, 0.5);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
+  }
+  .mc-btn:hover {
+    filter: brightness(1.12);
+  }
+  .mc-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 0 #2f4718, 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .mc-btn-gold {
+    background: linear-gradient(#ffd75e, #f0a815);
+    border-color: #ffe9a8 #a86f08 #a86f08 #ffe9a8;
+    box-shadow: 0 4px 0 0 #a86f08, 0 6px 8px rgba(0, 0, 0, 0.5);
+    color: #3b2500;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .mc-btn-gold:active {
+    box-shadow: 0 0 0 0 #a86f08, 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .mc-btn-dark {
+    background: linear-gradient(#4b4f57, #2b2e34);
+    border-color: #6b7079 #17191d #17191d #6b7079;
+    box-shadow: 0 4px 0 0 #17191d, 0 6px 8px rgba(0, 0, 0, 0.5);
+  }
+  .mc-btn-dark:active {
+    box-shadow: 0 0 0 0 #17191d, 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Pixel heading */
+  .mc-heading {
+    @apply font-pixel uppercase leading-tight;
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  }
+
+  /* An inventory slot */
+  .mc-slot {
+    @apply relative flex items-center justify-center;
+    background: #8b8b8b;
+    border: 3px solid;
+    border-color: #373737 #ffffff #ffffff #373737;
+    box-shadow: inset 2px 2px 0 rgba(55, 55, 55, 0.6);
+  }
+
+  .section-label {
+    @apply font-pixel uppercase text-gold-light;
+    font-size: 1.1rem;
+    text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6);
+  }
+
+  .pixel-border-dashed {
+    border: 3px dashed rgba(124, 181, 24, 0.6);
+  }
+}
+
+@layer utilities {
+  /* ---- 3D depth helpers ---- */
+  .scene-3d {
+    perspective: 900px;
+    perspective-origin: 50% 45%;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .text-shadow-mc {
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  }
+  .bg-sky-scene {
+    background: linear-gradient(
+      180deg,
+      #f5a04b 0%,
+      #d97b3f 18%,
+      #7a4a3a 42%,
+      #2a3b2e 68%,
+      #16241f 100%
+    );
+  }
+  .bg-night-scene {
+    background: linear-gradient(
+      180deg,
+      #0a1a3a 0%,
+      #0a1226 28%,
+      #0b1020 52%,
+      #10151f 76%,
+      #0d0f12 100%
+    );
+  }
+  .bg-nether-scene {
+    background: radial-gradient(
+        circle at 50% 40%,
+        rgba(162, 75, 255, 0.35) 0%,
+        transparent 55%
+      ),
+      linear-gradient(180deg, #2a0a12 0%, #1a0710 60%, #0d0409 100%);
+  }
+  .grid-cracks {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.25) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.25) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+}
