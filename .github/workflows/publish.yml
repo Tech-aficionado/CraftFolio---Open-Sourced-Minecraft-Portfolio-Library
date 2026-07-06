@@ -5,6 +5,7 @@ name: Publish to npm
 on:
   release:
     types: [published]
+  workflow_dispatch: # allows a manual publish from the Actions tab
 
 jobs:
   publish:
