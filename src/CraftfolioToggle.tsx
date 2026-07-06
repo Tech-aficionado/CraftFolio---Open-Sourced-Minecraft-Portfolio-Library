@@ -1,9 +1,64 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import Craftfolio from "./Craftfolio";
 import type { DeepPartial, PortfolioData, PortfolioOptions } from "./types";
 
 type Position = "bottom-right" | "bottom-left" | "top-right" | "top-left";
+
+/* Block build/dissolve wipe played while switching versions. */
+const COLS = 12;
+const ROWS = 8;
+const BLOCK_COLORS = ["#5b8731", "#6b4a2e", "#7f7f7f", "#6ea338", "#4b3421"];
+
+function TransitionCover({
+  target,
+  zIndex,
+  onComplete,
+}: {
+  target: "shown" | "hidden";
+  zIndex: number;
+  onComplete: (t: "shown" | "hidden") => void;
+}) {
+  return (
+    <motion.div
+      aria-hidden
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex,
+        display: "grid",
+        gridTemplateColumns: `repeat(${COLS}, 1fr)`,
+        gridTemplateRows: `repeat(${ROWS}, 1fr)`,
+        pointerEvents: "none",
+      }}
+      initial="hidden"
+      animate={target}
+      variants={{
+        shown: { transition: { staggerChildren: 0.006 } },
+        hidden: { transition: { staggerChildren: 0.006, staggerDirection: -1 } },
+      }}
+      onAnimationComplete={(def) => onComplete(def as "shown" | "hidden")}
+    >
+      {Array.from({ length: COLS * ROWS }).map((_, i) => (
+        <motion.div
+          key={i}
+          style={{
+            background: BLOCK_COLORS[i % BLOCK_COLORS.length],
+            boxShadow:
+              "inset -4px -4px 0 rgba(0,0,0,0.28), inset 4px 4px 0 rgba(255,255,255,0.14)",
+            imageRendering: "pixelated",
+          }}
+          variants={{
+            hidden: { scale: 0, opacity: 0 },
+            shown: { scale: 1.03, opacity: 1 },
+          }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+        />
+      ))}
+    </motion.div>
+  );
+}
 
 export type CraftfolioToggleProps = {
   /**
@@ -70,13 +125,22 @@ export default function CraftfolioToggle({
 }: CraftfolioToggleProps) {
   const [mounted, setMounted] = useState(false);
   const [active, setActive] = useState(defaultActive);
+  const [pending, setPending] = useState(defaultActive);
+  const [phase, setPhase] = useState<"idle" | "in" | "out">("idle");
+
+  const prefersReduced =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Avoid SSR hydration mismatch: only portal after mount.
   useEffect(() => {
     setMounted(true);
     if (persist && typeof localStorage !== "undefined") {
       const saved = localStorage.getItem(storageKey);
-      if (saved === "1") setActive(true);
+      if (saved === "1") {
+        setActive(true);
+        setPending(true);
+      }
     }
   }, [persist, storageKey]);
 
@@ -91,7 +155,28 @@ export default function CraftfolioToggle({
     [onChange, persist, storageKey]
   );
 
-  const toggle = useCallback(() => setActivePersisted(!active), [active, setActivePersisted]);
+  const toggle = useCallback(() => {
+    if (prefersReduced) {
+      setActivePersisted(!active);
+      return;
+    }
+    if (phase !== "idle") return; // ignore clicks mid-transition
+    setPending(!active);
+    setPhase("in"); // blocks build up to cover the screen
+  }, [active, phase, prefersReduced, setActivePersisted]);
+
+  const onCoverComplete = useCallback(
+    (target: "shown" | "hidden") => {
+      if (target === "shown") {
+        // fully covered — swap versions behind the cover, then dissolve away
+        setActivePersisted(pending);
+        setPhase("out");
+      } else {
+        setPhase("idle");
+      }
+    },
+    [pending, setActivePersisted]
+  );
 
   // Lock body scroll + Escape-to-exit while the overlay is open.
   useEffect(() => {
@@ -183,6 +268,14 @@ export default function CraftfolioToggle({
                 </span>
                 {active ? exitLabel : label}
               </button>
+            )}
+
+            {phase !== "idle" && (
+              <TransitionCover
+                target={phase === "in" ? "shown" : "hidden"}
+                zIndex={zIndex + 2}
+                onComplete={onCoverComplete}
+              />
             )}
           </>,
           document.body
