@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Craftfolio — Thumbnail</title>
+    <!--
+      THUMBNAIL (1280 × 640) — perfect for a GitHub social preview or LinkedIn card.
+      How to export a PNG:
+      1) Open this file in Chrome/Edge.
+      2) DevTools (F12) → Device Toolbar (Ctrl+Shift+M) → set 1280 × 640.
+      3) DevTools menu (⋮) → "Capture screenshot"  (or right-click the card → screenshot).
+      Or simply screenshot the .card element at 100% zoom.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { margin: 0; box-sizing: border-box; -webkit-font-smoothing: none; }
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: #0d0f12;
+        font-family: "VT323", monospace;
+      }
+      .card {
+        position: relative;
+        width: 1280px;
+        height: 640px;
+        overflow: hidden;
+        image-rendering: pixelated;
+        background: linear-gradient(
+          180deg,
+          #f5a04b 0%,
+          #d97b3f 20%,
+          #7a4a3a 45%,
+          #2a3b2e 70%,
+          #16241f 100%
+        );
+      }
+
+      /* sun + glow */
+      .sun {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 96px;
+        height: 96px;
+        background: #ffe9a0;
+        box-shadow: 0 0 120px 60px rgba(255, 233, 160, 0.55);
+      }
+      .cloud {
+        position: absolute;
+        height: 18px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+      .c1 { top: 90px; left: 120px; width: 120px; }
+      .c2 { top: 150px; right: 160px; width: 96px; opacity: 0.6; }
+      .c3 { top: 60px; left: 46%; width: 80px; opacity: 0.5; }
+
+      /* stars appear faint on the dark lower sky */
+      .star { position: absolute; width: 3px; height: 3px; background: #fff; opacity: 0.5; }
+
+      /* floating pixel blocks (Minecraft inventory look) */
+      .block {
+        position: absolute;
+        border: 4px solid;
+        border-color: rgba(255,255,255,.28) rgba(0,0,0,.4) rgba(0,0,0,.4) rgba(255,255,255,.28);
+        box-shadow: inset -6px -6px 0 rgba(0,0,0,.28), inset 6px 6px 0 rgba(255,255,255,.16);
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        transform: rotate(-8deg);
+      }
+      .b-grass { width: 74px; height: 74px; background: #5b8731; top: 150px; right: 300px; }
+      .b-dia   { width: 62px; height: 62px; background: #61dafb; top: 300px; right: 180px; transform: rotate(10deg); }
+      .b-gold  { width: 58px; height: 58px; background: #f0a815; top: 420px; right: 340px; transform: rotate(-5deg); }
+      .b-ame   { width: 50px; height: 50px; background: #a24bff; top: 250px; right: 470px; transform: rotate(7deg); }
+
+      /* terrain */
+      .ground {
+        position: absolute;
+        inset: auto 0 0 0;
+        height: 150px;
+        background: #79553a;
+        background-image:
+          radial-gradient(rgba(0,0,0,.18) 1px, transparent 1px),
+          radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+        background-size: 10px 10px, 10px 10px;
+        background-position: 0 0, 5px 5px;
+        border-top: 12px solid #5b8731;
+        box-shadow: inset 0 12px 0 #6ea338;
+      }
+      .hill {
+        position: absolute; bottom: 138px; width: 90px; height: 60px;
+        background: #5b8731; border-top: 10px solid #6ea338;
+        box-shadow: inset -8px 0 0 rgba(0,0,0,.15);
+      }
+      .h1 { right: 120px; }
+      .h2 { right: 60px; bottom: 190px; width: 60px; height: 52px; }
+
+      /* tree */
+      .trunk { position: absolute; bottom: 150px; right: 220px; width: 20px; height: 70px; background: #5a4026; box-shadow: inset -6px 0 0 #3f2c19; }
+      .leaves { position: absolute; bottom: 200px; right: 190px; width: 84px; height: 70px; background: #3f7a29;
+        box-shadow: inset -10px -10px 0 rgba(0,0,0,.2), inset 8px 8px 0 rgba(255,255,255,.12); }
+
+      /* torch */
+      .torch { position: absolute; bottom: 150px; left: 60px; width: 10px; height: 46px; background: #5a4026; }
+      .flame { position: absolute; bottom: 194px; left: 55px; width: 20px; height: 20px; background: #ffb43a; box-shadow: 0 0 24px 8px rgba(255,150,40,.6); }
+
+      /* text block */
+      .content { position: absolute; top: 150px; left: 90px; z-index: 5; max-width: 720px; }
+      .badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: "Press Start 2P"; font-size: 12px; color: #0f2a06;
+        background: linear-gradient(#7cb518, #5b8731); color: #fff;
+        padding: 8px 12px; border: 3px solid;
+        border-color: #a4de3a #2f4718 #2f4718 #a4de3a;
+        box-shadow: 0 4px 0 #2f4718; text-shadow: 2px 2px 0 rgba(0,0,0,.5);
+        margin-bottom: 26px; letter-spacing: 1px;
+      }
+      h1 {
+        font-family: "Press Start 2P"; font-size: 62px; line-height: 1.15;
+        text-shadow: 5px 5px 0 rgba(0,0,0,.55);
+      }
+      h1 .a { color: #ffffff; }
+      h1 .b { color: #ffd75e; }
+      .tag {
+        font-size: 34px; color: #f3ead6; margin-top: 22px; max-width: 560px;
+        text-shadow: 2px 2px 0 rgba(0,0,0,.5); line-height: 1.15;
+      }
+      .install {
+        display: inline-flex; align-items: center; gap: 10px; margin-top: 30px;
+        font-family: "Press Start 2P"; font-size: 15px; color: #3b2500;
+        background: linear-gradient(#ffd75e, #f0a815);
+        padding: 14px 20px; border: 3px solid;
+        border-color: #ffe9a8 #a86f08 #a86f08 #ffe9a8;
+        box-shadow: 0 5px 0 #a86f08, 0 8px 14px rgba(0,0,0,.4);
+      }
+      .hearts { margin-top: 26px; font-size: 26px; letter-spacing: 4px; }
+      .foot {
+        position: absolute; bottom: 24px; left: 90px; z-index: 5;
+        font-family: "Press Start 2P"; font-size: 11px; color: #d8e6c2;
+        text-shadow: 2px 2px 0 rgba(0,0,0,.6); letter-spacing: 1px;
+      }
+      .scrim {
+        position: absolute; inset: 0;
+        background: linear-gradient(90deg, rgba(13,15,18,.72) 0%, rgba(13,15,18,.28) 42%, transparent 66%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="sun"></div>
+      <div class="cloud c1"></div>
+      <div class="cloud c2"></div>
+      <div class="cloud c3"></div>
+
+      <!-- floating blocks -->
+      <div class="block b-grass">🌱</div>
+      <div class="block b-dia">💎</div>
+      <div class="block b-gold">⛏️</div>
+      <div class="block b-ame">📖</div>
+
+      <!-- scenery -->
+      <div class="hill h1"></div>
+      <div class="hill h2"></div>
+      <div class="leaves"></div>
+      <div class="trunk"></div>
+      <div class="ground"></div>
+      <div class="torch"></div>
+      <div class="flame"></div>
+
+      <!-- readability scrim over the left -->
+      <div class="scrim"></div>
+
+      <!-- content -->
+      <div class="content">
+        <span class="badge">⛏️ OPEN SOURCE · REACT LIBRARY</span>
+        <h1><span class="a">CRAFT</span><span class="b">FOLIO</span></h1>
+        <p class="tag">One-click Minecraft theme for your portfolio — a live 3D voxel world.</p>
+        <span class="install">▶ npm install craftfolio</span>
+        <div class="hearts">❤️❤️❤️❤️❤️</div>
+      </div>
+
+      <div class="foot">REACT · THREE.JS · FRAMER MOTION · TYPESCRIPT</div>
+    </div>
+  </body>
+</html>
