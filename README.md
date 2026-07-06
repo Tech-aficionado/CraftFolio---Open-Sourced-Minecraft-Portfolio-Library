@@ -4,24 +4,17 @@
 
 ### Turn your React app into a **Minecraft-themed developer portfolio** — with a live 3D voxel world — in one component.
 
-[![npm](https://img.shields.io/badge/npm-craftfolio-cb3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/craftfolio)
+[![npm version](https://img.shields.io/npm/v/craftfolio?logo=npm&logoColor=white&label=npm&color=cb3837)](https://www.npmjs.com/package/craftfolio)
+[![downloads](https://img.shields.io/npm/dm/craftfolio?color=5b8731&label=downloads)](https://www.npmjs.com/package/craftfolio)
 [![CI](https://github.com/Tech-aficionado/CraftFolio---Open-Sourced-Minecraft-Portfolio-Library/actions/workflows/ci.yml/badge.svg)](https://github.com/Tech-aficionado/CraftFolio---Open-Sourced-Minecraft-Portfolio-Library/actions/workflows/ci.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-6a0dad)](./LICENSE)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?color=5b8731)](./CONTRIBUTING.md)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-5b8731)](./CONTRIBUTING.md)
 [![stars](https://img.shields.io/github/stars/Tech-aficionado/CraftFolio---Open-Sourced-Minecraft-Portfolio-Library?logo=github&color=f0a815)](https://github.com/Tech-aficionado/CraftFolio---Open-Sourced-Minecraft-Portfolio-Library/stargazers)
 
 ![React](https://img.shields.io/badge/React-18-61dafb?logo=react&logoColor=white&labelColor=20232a)
 ![Three.js](https://img.shields.io/badge/Three.js-r169-black?logo=three.js&logoColor=white)
 ![Framer Motion](https://img.shields.io/badge/Framer_Motion-11-e535ab?logo=framer&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
-
-<!--
-  Once the package is live on npm, swap the static npm badge above for these
-  dynamic ones (they only render correctly after the first publish):
-  [![npm version](https://img.shields.io/npm/v/craftfolio?logo=npm&color=cb3837)](https://www.npmjs.com/package/craftfolio)
-  [![downloads](https://img.shields.io/npm/dm/craftfolio?color=5b8731)](https://www.npmjs.com/package/craftfolio)
-  [![bundle size](https://img.shields.io/bundlephobia/minzip/craftfolio?label=gzip&color=f0a815)](https://bundlephobia.com/package/craftfolio)
--->
 
 </div>
 
