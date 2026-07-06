@@ -17,14 +17,19 @@ Built with **React 18** · **Three.js** · **Framer Motion** · **TypeScript**
 
 ---
 
+Add **one button** to your existing portfolio. Click it, and your whole site flips into a Minecraft theme — built from your own data — as a full-screen overlay. Click again (or press `Esc`) to return to your normal site.
+
 ```tsx
-import { Craftfolio } from "craftfolio";
+import { CraftfolioToggle } from "craftfolio";
 import "craftfolio/styles.css";
 
-export default () => <Craftfolio data={{ profile: { firstName: "Ada", lastName: "Lovelace" } }} />;
+// Drop this anywhere in your app. It renders a floating "Minecraft Mode" button.
+<CraftfolioToggle data={myData} />;
 ```
 
-That's the whole integration. Feed it a data object, get a full-page portfolio: a sunset overworld hero with a **real WebGL voxel landscape**, an inventory of 3D skill blocks, a heart-bar stats panel, an enchanting-table experience timeline, and a Nether-portal contact section — plus a day/night toggle.
+That's the whole integration. When toggled on you get a full portfolio: a sunset overworld hero with a **real WebGL voxel landscape**, an inventory of 3D skill blocks, a heart-bar stats panel, an enchanting-table experience timeline, and a Nether-portal contact section — plus its own day/night switch.
+
+Want it as a permanent page instead of a toggle? Use [`<Craftfolio />`](#option-b--full-page) directly.
 
 ---
 
@@ -32,8 +37,8 @@ That's the whole integration. Feed it a data object, get a full-page portfolio: 
 
 - [Features](#-features)
 - [Quick start](#-quick-start)
-  - [Next.js (App Router)](#nextjs-app-router)
-  - [Vite / CRA](#vite--cra)
+  - [Option A — theme toggle (drop-in)](#option-a--theme-toggle-recommended-for-existing-sites)
+  - [Option B — full page](#option-b--full-page)
 - [The data prop](#-the-data-prop)
 - [Options](#-options)
 - [Theming & day/night](#-theming--daynight)
@@ -51,7 +56,8 @@ That's the whole integration. Feed it a data object, get a full-page portfolio: 
 
 ## ✨ Features
 
-- 🧱 **One-component install** — render `<Craftfolio />`, pass your data, done.
+- 🔘 **One-button theme toggle** — drop `<CraftfolioToggle />` onto your existing site; click to overlay the Minecraft theme, click (or `Esc`) to exit.
+- 🧱 **One-component install** — or render `<Craftfolio />` directly for a full themed route.
 - 🌍 **Live 3D voxel worlds** — procedurally generated terrain, a carved river with shimmering water, trees, drifting cloud blocks, and a voxel character standing on the ground. Not images — real Three.js.
 - 🌗 **Day / night theme** — animated sunset ↔ moonlit sky, with soft directional shadows and a god-ray sun. Remembers the user's choice.
 - 🎒 **Authentic Minecraft UI** — beveled panels, inventory slots, a hotbar, heart bars, and pixel fonts.
@@ -70,16 +76,47 @@ npm install craftfolio
 # or: pnpm add craftfolio · yarn add craftfolio
 ```
 
-`react` and `react-dom` (v18+) are peer dependencies. `three` and `framer-motion` install automatically.
+`react` and `react-dom` (v18+) are peer dependencies. `three` and `framer-motion` install automatically. Import the stylesheet once: `import "craftfolio/styles.css"`.
 
-### Next.js (App Router)
+Craftfolio renders WebGL and uses browser APIs, so it must run on the **client** (in Next.js App Router, add `"use client"`).
 
-Craftfolio renders WebGL and uses browser APIs, so it must run on the client.
+### Option A — theme toggle (recommended for existing sites)
+
+`CraftfolioToggle` renders a floating button and, on click, overlays the full Minecraft-themed portfolio on top of your current page. It portals to `document.body`, locks background scroll, and exits on `Esc` — so you can drop it anywhere.
 
 ```tsx
-// app/page.tsx
-"use client";
+"use client"; // Next.js App Router only
 
+import { CraftfolioToggle } from "craftfolio";
+import "craftfolio/styles.css";
+import { portfolioData } from "./portfolio-data";
+
+export default function Layout({ children }) {
+  return (
+    <>
+      {children}
+      <CraftfolioToggle data={portfolioData} position="bottom-right" persist />
+    </>
+  );
+}
+```
+
+Prefer your own button? Hide the built-in one and drive it via state:
+
+```tsx
+const [on, setOn] = useState(false);
+
+<>
+  <button onClick={() => setOn(true)}>Try Minecraft mode</button>
+  <CraftfolioToggle data={portfolioData} hideButton defaultActive={on} onChange={setOn} />
+</>
+```
+
+### Option B — full page
+
+Use the component directly to make an entire route the Minecraft portfolio:
+
+```tsx
 import { Craftfolio } from "craftfolio";
 import "craftfolio/styles.css";
 import { portfolioData } from "./portfolio-data";
@@ -89,20 +126,7 @@ export default function Page() {
 }
 ```
 
-> Prefer a dedicated route (e.g. `/`) so the theme takes over the full page. If you keep other UI on the page, the styles stay scoped to Craftfolio and won't leak.
-
-### Vite / CRA
-
-```tsx
-// src/App.tsx
-import { Craftfolio } from "craftfolio";
-import "craftfolio/styles.css";
-import { portfolioData } from "./portfolio-data";
-
-export default function App() {
-  return <Craftfolio data={portfolioData} />;
-}
-```
+> Styles are scoped to `.craftfolio`, so even the overlay won't leak into the rest of your app.
 
 ---
 
@@ -205,6 +229,22 @@ const data: PortfolioData = {
 | `showThemeToggle` | `boolean` | `true` | Show the sun/moon toggle in the navbar. |
 | `sections` | `SectionKey[]` | all 6 | Which sections to render, **in order**. Keys: `"hero" \| "about" \| "projects" \| "skills" \| "experience" \| "contact"`. |
 
+### `<CraftfolioToggle>` props
+
+Everything above (`data`, `options`) plus:
+
+| Prop | Type | Default | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | `"Minecraft Mode"` | Button text when the theme is off. |
+| `exitLabel` | `string` | `"Exit Minecraft"` | Button text when the theme is on. |
+| `position` | `"bottom-right" \| "bottom-left" \| "top-right" \| "top-left"` | `"bottom-right"` | Corner for the floating button. |
+| `defaultActive` | `boolean` | `false` | Start with the theme already on. |
+| `persist` | `boolean` | `false` | Remember on/off in `localStorage`. |
+| `storageKey` | `string` | `"craftfolio:active"` | Key used when `persist` is on. |
+| `onChange` | `(active: boolean) => void` | — | Fires on every toggle. |
+| `hideButton` | `boolean` | `false` | Hide the built-in button and control it yourself. |
+| `zIndex` | `number` | `2147483000` | Overlay z-index (button sits one above). |
+
 ---
 
 ## 🌗 Theming & day/night
@@ -219,7 +259,8 @@ const data: PortfolioData = {
 
 ```ts
 import {
-  Craftfolio,        // the component (default export too)
+  Craftfolio,        // full-page portfolio component
+  CraftfolioToggle,  // floating button + overlay for existing sites
   usePortfolio,      // () => merged data + options (use inside custom children)
   useTheme,          // () => { theme, isNight, toggle, setTheme }
   defaultData,       // the built-in example content
@@ -285,9 +326,9 @@ Modern evergreen browsers with **WebGL** (Chrome, Edge, Firefox, Safari). Withou
 ## ❓ FAQ
 
 <details>
-<summary><b>Does this magically re-skin my existing site?</b></summary>
+<summary><b>Does it change my existing site on a button click?</b></summary>
 
-No — and nothing safely can. Craftfolio is a full-page component you render (typically as your main route) with your data. It replaces the UI on that route with the Minecraft theme.
+Yes — that's what <code>&lt;CraftfolioToggle&gt;</code> is for. It adds a floating button that overlays the full Minecraft theme (built from your data) on top of your current page, and exits back to your normal site on click or <kbd>Esc</kbd>. It's an overlay driven by your data, not an automatic rewrite of your existing DOM (nothing can safely do that). Prefer a dedicated themed route? Use <code>&lt;Craftfolio&gt;</code>.
 </details>
 
 <details>
