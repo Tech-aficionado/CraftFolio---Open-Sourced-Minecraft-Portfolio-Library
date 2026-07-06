@@ -1,7 +1,7 @@
 {
   "name": "craftfolio",
   "private": false,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Craftfolio — a drop-in React component that renders a complete Minecraft-themed developer portfolio from your own data, with live 3D voxel worlds.",
   "type": "module",
   "license": "MIT",
