@@ -52,14 +52,32 @@ src/
 
 ## Releasing (maintainers)
 
-Publishing is automated. Bump the version, then publish a GitHub Release:
+Publishing is automated via `.github/workflows/publish.yml` (needs the `NPM_TOKEN` repo secret). There are two ways to publish:
+
+**A. Manual run with a version (easiest)**
+
+Actions → **Publish to npm** → **Run workflow**, and enter a `version`:
+- an exact version like `1.0.1`, or
+- a bump keyword: `patch` / `minor` / `major`.
+
+The workflow bumps `package.json`, commits + tags it, pushes, builds, and publishes. Leave the field blank to publish `package.json` as-is.
+
+Or via the CLI:
+
+```bash
+gh workflow run publish.yml -f version=patch
+```
+
+**B. GitHub Release**
+
+Bump locally, then publish a Release (the tag triggers the workflow):
 
 ```bash
 npm version patch   # or minor / major
 git push --follow-tags
 ```
 
-Creating the GitHub Release triggers `.github/workflows/publish.yml`, which builds and publishes to npm (needs the `NPM_TOKEN` repo secret).
+> npm rejects re-publishing an existing version — always bump before publishing.
 
 ## License
 

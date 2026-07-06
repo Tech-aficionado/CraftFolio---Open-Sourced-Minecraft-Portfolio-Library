@@ -1,17 +1,24 @@
 name: Publish to npm
 
-# Publishes the package when a GitHub Release is published.
+# Publishes the package to npm.
+# - Automatically when a GitHub Release is published.
+# - Manually from the Actions tab, optionally bumping the version first.
 # Requires an NPM_TOKEN secret (an npm automation token) in the repo settings.
 on:
   release:
     types: [published]
-  workflow_dispatch: # allows a manual publish from the Actions tab
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish: an exact version (e.g. 1.0.1) or a bump keyword (patch | minor | major). Leave blank to publish package.json as-is."
+        required: false
+        default: ""
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # allow pushing the version bump commit + tag
       id-token: write # enables npm provenance
     steps:
       - name: Checkout
@@ -26,6 +33,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Bump version
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version "${{ github.event.inputs.version }}" -m "release: v%s"
+          git push --follow-tags
 
       - name: Build library
         run: npm run build:lib
