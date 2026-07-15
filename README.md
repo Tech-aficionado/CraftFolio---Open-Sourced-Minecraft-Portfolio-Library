@@ -22,6 +22,8 @@
 
 Add **one button** to your existing portfolio. Click it, and your whole site flips into a Minecraft theme — built from your own data — as a full-screen overlay. Click again (or press `Esc`) to return to your normal site.
 
+> **New in v1.1:** Control Minecraft Mode from your own navigation with the `active` prop, while viewport-aware loading initializes each voxel world only when it is approaching the screen. Unsupported WebGL browsers now keep the gradient fallback automatically.
+
 ```tsx
 import { CraftfolioToggle } from "craftfolio";
 import "craftfolio/styles.css";
@@ -59,7 +61,7 @@ Want it as a permanent page instead of a toggle? Use [`<Craftfolio />`](#option-
 
 ## ✨ Features
 
-- 🔘 **One-button theme toggle** — drop `<CraftfolioToggle />` onto your existing site; click to overlay the Minecraft theme, click (or `Esc`) to exit.
+- 🔘 **One-button theme toggle** — drop `<CraftfolioToggle />` onto your existing site; use its floating button or control it from your own UI with `active` + `onChange`.
 - 🧱 **One-component install** — or render `<Craftfolio />` directly for a full themed route.
 - 🌍 **Live 3D voxel worlds** — procedurally generated terrain, a carved river with shimmering water, trees, drifting cloud blocks, and a voxel character standing on the ground. Not images — real Three.js.
 - 🌗 **Day / night theme** — animated sunset ↔ moonlit sky, with soft directional shadows and a god-ray sun. Remembers the user's choice.
@@ -111,10 +113,19 @@ Prefer your own button? Hide the built-in one and drive it via state:
 const [on, setOn] = useState(false);
 
 <>
-  <button onClick={() => setOn(true)}>Try Minecraft mode</button>
-  <CraftfolioToggle data={portfolioData} hideButton defaultActive={on} onChange={setOn} />
+  <button onClick={() => setOn((value) => !value)}>
+    {on ? "Exit Minecraft" : "Try Minecraft mode"}
+  </button>
+  <CraftfolioToggle
+    data={portfolioData}
+    hideButton
+    active={on}
+    onChange={setOn}
+  />
 </>
 ```
+
+`active` makes the component controlled: your state is authoritative, and `onChange` receives requests from `Esc` or the built-in button. Without `active`, Craftfolio remains uncontrolled and `defaultActive`/`persist` work exactly as before.
 
 ### Option B — full page
 
@@ -243,7 +254,8 @@ Everything above (`data`, `options`) plus:
 | `label` | `string` | `"Minecraft Mode"` | Button text when the theme is off. |
 | `exitLabel` | `string` | `"Exit Minecraft"` | Button text when the theme is on. |
 | `position` | `"bottom-right" \| "bottom-left" \| "top-right" \| "top-left"` | `"bottom-right"` | Corner for the floating button. |
-| `defaultActive` | `boolean` | `false` | Start with the theme already on. |
+| `active` | `boolean` | — | Controlled on/off state. Pair with `onChange`; takes precedence over `defaultActive` and persisted state. |
+| `defaultActive` | `boolean` | `false` | Initial state for uncontrolled usage. |
 | `persist` | `boolean` | `false` | Remember on/off in `localStorage`. |
 | `storageKey` | `string` | `"craftfolio:active"` | Key used when `persist` is on. |
 | `onChange` | `(active: boolean) => void` | — | Fires on every toggle. |
@@ -304,7 +316,9 @@ The voxel worlds are engineered to be cheap:
 - **Instanced geometry** — each block type is one `InstancedMesh` (a handful of draw calls total).
 - **Column face-culling** — only surface + exposed cliff blocks are generated; buried voxels are skipped.
 - **Baked shadows** — the shadow map renders once, then freezes (terrain and light are static).
-- **Visibility-gated rendering** — a scene only renders while it's on-screen and the tab is visible.
+- **Viewport-aware WebGL** — each scene's Three.js chunk, renderer, and terrain initialize only when it is within 600px of the viewport.
+- **Automatic fallback** — browsers that cannot create a WebGL context keep the built-in gradient scene instead of throwing.
+- **Visibility-gated rendering** — an initialized scene only renders while it is on-screen and the tab is visible.
 - **DPR + FPS caps** — background scenes cap device pixel ratio at 1.5 and throttle to ~30fps.
 - **Lazy WebGL** — the 3D bundle loads separately; set `enable3D: false` to skip it entirely.
 
@@ -315,7 +329,8 @@ Core bundle is small (React/Three/Framer are external peers/deps); the 3D chunk 
 ## ♿ Accessibility
 
 - Decorative 3D and effect layers are marked `aria-hidden`.
-- All motion (camera drift, water, clouds, parallax) respects `prefers-reduced-motion`.
+- The Minecraft overlay traps keyboard focus, exits on `Esc`, and restores focus to the element that opened it.
+- All motion (camera drift, water, clouds, parallax, and the block wipe) respects `prefers-reduced-motion`.
 - Text sits on scrims/panels for contrast over busy scenes.
 
 > Full WCAG conformance depends on your content (link labels, color choices). Test with real assistive tech before shipping.
@@ -324,7 +339,7 @@ Core bundle is small (React/Three/Framer are external peers/deps); the 3D chunk 
 
 ## 🌐 Browser support
 
-Modern evergreen browsers with **WebGL** (Chrome, Edge, Firefox, Safari). Without WebGL the 3D scenes won't render — set `enable3D: false` for a graceful, gradient-only fallback. Requires client-side rendering (uses `window`/WebGL), so mark it a client component under SSR frameworks.
+Modern evergreen browsers (Chrome, Edge, Firefox, Safari). WebGL-capable browsers get live voxel scenes; unsupported or blocked WebGL contexts automatically retain the gradient fallback. Set `enable3D: false` to skip 3D intentionally. Requires client-side rendering (uses browser APIs), so mark it a client component under SSR frameworks.
 
 ---
 

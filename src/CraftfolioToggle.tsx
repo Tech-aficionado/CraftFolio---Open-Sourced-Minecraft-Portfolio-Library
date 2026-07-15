@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import Craftfolio from "./Craftfolio";
@@ -77,7 +77,12 @@ export type CraftfolioToggleProps = {
   exitLabel?: string;
   /** Corner to anchor the floating button. */
   position?: Position;
-  /** Start with the Minecraft theme already on. */
+  /**
+   * Controlled Minecraft-mode state. When provided, this value is authoritative
+   * and `onChange` receives open/close requests from the built-in controls.
+   */
+  active?: boolean;
+  /** Initial state for uncontrolled usage. Ignored when `active` is provided. */
   defaultActive?: boolean;
   /** Remember the on/off choice in localStorage. */
   persist?: boolean;
@@ -116,6 +121,7 @@ export default function CraftfolioToggle({
   label = "Minecraft Mode",
   exitLabel = "Exit Minecraft",
   position = "bottom-right",
+  active: activeProp,
   defaultActive = false,
   persist = false,
   storageKey = "craftfolio:active",
@@ -123,75 +129,143 @@ export default function CraftfolioToggle({
   zIndex = 2147483000,
   hideButton = false,
 }: CraftfolioToggleProps) {
+  const isControlled = activeProp !== undefined;
+  const initialActive = activeProp ?? defaultActive;
   const [mounted, setMounted] = useState(false);
-  const [active, setActive] = useState(defaultActive);
-  const [pending, setPending] = useState(defaultActive);
+  const [uncontrolledActive, setUncontrolledActive] = useState(defaultActive);
+  const [renderedActive, setRenderedActive] = useState(initialActive);
+  const [pending, setPending] = useState(initialActive);
   const [phase, setPhase] = useState<"idle" | "in" | "out">("idle");
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onChangeRef = useRef(onChange);
 
+  const requestedActive = activeProp ?? uncontrolledActive;
   const prefersReduced =
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Avoid SSR hydration mismatch: only portal after mount.
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Avoid SSR hydration mismatch: only portal after mount. Persisted state only
+  // applies to uncontrolled usage; a controlled `active` prop is authoritative.
   useEffect(() => {
     setMounted(true);
-    if (persist && typeof localStorage !== "undefined") {
+    if (!isControlled && persist && typeof localStorage !== "undefined") {
       const saved = localStorage.getItem(storageKey);
-      if (saved === "1") {
-        setActive(true);
-        setPending(true);
+      if (saved === "1" || saved === "0") {
+        const restored = saved === "1";
+        setUncontrolledActive(restored);
+        setRenderedActive(restored);
+        setPending(restored);
       }
     }
-  }, [persist, storageKey]);
+  }, [isControlled, persist, storageKey]);
 
-  const setActivePersisted = useCallback(
+  const requestActive = useCallback(
     (next: boolean) => {
-      setActive(next);
-      onChange?.(next);
-      if (persist && typeof localStorage !== "undefined") {
-        localStorage.setItem(storageKey, next ? "1" : "0");
+      if (!isControlled) {
+        setUncontrolledActive(next);
+        if (persist && typeof localStorage !== "undefined") {
+          localStorage.setItem(storageKey, next ? "1" : "0");
+        }
       }
+      onChangeRef.current?.(next);
     },
-    [onChange, persist, storageKey]
+    [isControlled, persist, storageKey]
   );
 
-  const toggle = useCallback(() => {
+  // Prop and internal state both flow through the same block-wipe transition.
+  useEffect(() => {
+    if (requestedActive === renderedActive) return;
     if (prefersReduced) {
-      setActivePersisted(!active);
+      setRenderedActive(requestedActive);
+      setPending(requestedActive);
       return;
     }
-    if (phase !== "idle") return; // ignore clicks mid-transition
-    setPending(!active);
-    setPhase("in"); // blocks build up to cover the screen
-  }, [active, phase, prefersReduced, setActivePersisted]);
+    if (phase === "idle") {
+      setPending(requestedActive);
+      setPhase("in");
+    }
+  }, [phase, prefersReduced, renderedActive, requestedActive]);
+
+  const toggle = useCallback(() => {
+    if (phase !== "idle") return;
+    requestActive(!requestedActive);
+  }, [phase, requestActive, requestedActive]);
 
   const onCoverComplete = useCallback(
     (target: "shown" | "hidden") => {
       if (target === "shown") {
-        // fully covered — swap versions behind the cover, then dissolve away
-        setActivePersisted(pending);
+        // Fully covered — swap versions behind the cover, then dissolve away.
+        setRenderedActive(pending);
         setPhase("out");
       } else {
         setPhase("idle");
       }
     },
-    [pending, setActivePersisted]
+    [pending]
   );
 
-  // Lock body scroll + Escape-to-exit while the overlay is open.
+  // Treat the full-screen portfolio as a real modal: lock background scrolling,
+  // support Escape, trap keyboard focus, and restore focus when it closes.
   useEffect(() => {
-    if (!active || typeof document === "undefined") return;
+    if (!renderedActive || typeof document === "undefined") return;
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActivePersisted(false);
+
+    const focusFrame = window.requestAnimationFrame(() => {
+      overlayRef.current?.focus({ preventScroll: true });
+    });
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        requestActive(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const overlay = overlayRef.current;
+      if (!overlay) return;
+      const selector =
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      const focusable = Array.from(overlay.querySelectorAll<HTMLElement>(selector));
+      if (!hideButton && toggleRef.current) focusable.push(toggleRef.current);
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        overlay.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
+
     window.addEventListener("keydown", onKey);
     return () => {
+      window.cancelAnimationFrame(focusFrame);
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
+      const previous = previousFocusRef.current;
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
+      previousFocusRef.current = null;
     };
-  }, [active, setActivePersisted]);
+  }, [hideButton, renderedActive, requestActive]);
 
   const fab: React.CSSProperties = {
     position: "fixed",
@@ -207,20 +281,20 @@ export default function CraftfolioToggle({
     fontWeight: 700,
     lineHeight: 1,
     letterSpacing: "0.02em",
-    color: active ? "#fff" : "#0f2a06",
-    textShadow: active ? "1px 1px 0 rgba(0,0,0,.5)" : "none",
-    background: active
+    color: renderedActive ? "#fff" : "#0f2a06",
+    textShadow: renderedActive ? "1px 1px 0 rgba(0,0,0,.5)" : "none",
+    background: renderedActive
       ? "linear-gradient(#c0392b,#8a1f16)"
       : "linear-gradient(#7cb518,#5b8731)",
     borderStyle: "solid",
     borderWidth: 3,
-    borderColor: active
+    borderColor: renderedActive
       ? "#e57368 #5a130d #5a130d #e57368"
       : "#a4de3a #2f4718 #2f4718 #a4de3a",
-    boxShadow: active
+    boxShadow: renderedActive
       ? "0 4px 0 0 #5a130d, 0 6px 14px rgba(0,0,0,.45)"
       : "0 4px 0 0 #2f4718, 0 6px 14px rgba(0,0,0,.45)",
-    cursor: "pointer",
+    cursor: phase === "idle" ? "pointer" : "wait",
     imageRendering: "pixelated",
     userSelect: "none",
   };
@@ -244,8 +318,10 @@ export default function CraftfolioToggle({
       {mounted &&
         createPortal(
           <>
-            {active && (
+            {renderedActive && (
               <div
+                ref={overlayRef}
+                tabIndex={-1}
                 style={overlay}
                 role="dialog"
                 aria-modal="true"
@@ -257,16 +333,18 @@ export default function CraftfolioToggle({
 
             {!hideButton && (
               <button
+                ref={toggleRef}
                 type="button"
                 onClick={toggle}
                 style={fab}
-                aria-pressed={active}
-                title={active ? exitLabel : label}
+                aria-pressed={renderedActive}
+                aria-busy={phase !== "idle"}
+                title={renderedActive ? exitLabel : label}
               >
                 <span aria-hidden style={{ fontSize: 16 }}>
-                  {active ? "✕" : "⛏️"}
+                  {renderedActive ? "✕" : "⛏️"}
                 </span>
-                {active ? exitLabel : label}
+                {renderedActive ? exitLabel : label}
               </button>
             )}
 
