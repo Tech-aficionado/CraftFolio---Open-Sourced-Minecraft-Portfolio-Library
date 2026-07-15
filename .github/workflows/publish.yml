@@ -34,12 +34,37 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve manual version
+        id: version
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.version != '' }}
+        shell: bash
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: |
+          current_version="$(node -p "require('./package.json').version")"
+          requested_version="${REQUESTED_VERSION#v}"
+
+          if [[ ! "$requested_version" =~ ^(patch|minor|major|[0-9]+\.[0-9]+\.[0-9]+([+-][0-9A-Za-z.-]+)?)$ ]]; then
+            echo "::error::Invalid version '$REQUESTED_VERSION'. Use patch, minor, major, or an exact semantic version."
+            exit 1
+          fi
+
+          echo "value=$requested_version" >> "$GITHUB_OUTPUT"
+          if [[ "$requested_version" == "$current_version" ]]; then
+            echo "bump=false" >> "$GITHUB_OUTPUT"
+            echo "package.json is already at $current_version; publishing without another version bump."
+          else
+            echo "bump=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Bump version
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version != '' }}
+        if: ${{ steps.version.outputs.bump == 'true' }}
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version "${{ github.event.inputs.version }}" -m "release: v%s"
+          npm version "$VERSION" -m "release: v%s"
           git push --follow-tags
 
       - name: Build library
