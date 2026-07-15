@@ -22,7 +22,7 @@
 
 Add **one button** to your existing portfolio. Click it, and your whole site flips into a Minecraft theme — built from your own data — as a full-screen overlay. Click again (or press `Esc`) to return to your normal site.
 
-> **New in v1.1:** Control Minecraft Mode from your own navigation with the `active` prop, while viewport-aware loading initializes each voxel world only when it is approaching the screen. Unsupported WebGL browsers now keep the gradient fallback automatically.
+> **New in v1.0.3:** Control Minecraft Mode from your own navigation with the `active` prop, while viewport-aware loading initializes each voxel world only when it is approaching the screen. Unsupported WebGL browsers now keep the gradient fallback automatically.
 
 ```tsx
 import { CraftfolioToggle } from "craftfolio";
